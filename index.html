@@ -30,6 +30,8 @@
         init: function () {
           const el = this.el;
           const bgm = document.querySelector('#bgm-coffee');
+          const bgm1 = document.querySelector('#bgm-coffee1');
+          const bgm3 = document.querySelector('#bgm-coffee2');
           const ads = document.querySelectorAll('.coffee-ad');
           const cameraRig = document.querySelector('#camera-rig');
           const clickMsg = document.querySelector('#click-msg');
@@ -45,6 +47,12 @@
             el.setAttribute('material', 'color', '#ffffff');
             el.setAttribute('scale', '1 1 1');
             bgm.components.sound.playSound();
+            bgm1.components.sound.playSound();
+
+            // Play bgm3 after bgm1 finishes
+            bgm1.addEventListener('sound-ended', () => {
+              bgm3.components.sound.playSound();
+            });
             
             // Hide office group and show coffee shop
             officeGroup.setAttribute('visible', 'false');
@@ -124,8 +132,10 @@
       
       <a-assets>
         <img id="floorTex" src="img/flo.jpeg" crossorigin="anonymous">
-        <audio id="src2" src="aud/2.wav"></audio>
+        <audio id="src2" src="aud/1.wav"></audio>
         <audio id="src4" src="aud/11.mpeg"></audio>
+        <audio id="src5" src="aud/2.wav"></audio>
+        <audio id="src6" src="aud/3.wav"></audio>
         <img id="ad1" src="img/1.jpeg" crossorigin="anonymous">
         <img id="ad2" src="img/2.jpeg" crossorigin="anonymous">
         <img id="ad3" src="img/3.jpeg" crossorigin="anonymous">
@@ -135,14 +145,25 @@
       </a-assets>
 
       <a-entity id="audio2" sound="src: #src2; autoplay: true"></a-entity>
-      <a-entity id="bgm-coffee" sound="src: #src4; loop: true; volume: 0.2"></a-entity>
+      <a-entity id="bgm-coffee" sound="src: #src4; loop: true; volume: 0.1"></a-entity>
+      <a-entity id="bgm-coffee1" sound="src: #src5; loop: false; volume: 1"></a-entity>
+      <a-entity id="bgm-coffee2" sound="src: #src6; loop: false; volume: 1"></a-entity>
       <a-entity id="poster-sound" sound="volume: 1"></a-entity>
 
       <a-entity id="camera-rig" position="0 0 -2">
         <a-camera look-controls wasd-controls="acceleration: 15">
           <a-cursor color="#FF0000" raycaster="objects: .clickable"></a-cursor>
           <a-text id="msg2" visible="false" value="Coffee Time ☕" position="0 0 -1" align="center" width="3" color="#FFFFFF"></a-text>
-          <a-text id="click-msg" visible="false" value="Click a poster to learn more" position="0 0.6 -1" align="center" width="2.5" color="#00FF00"></a-text>
+         <a-text 
+  id="click-msg" 
+  visible="false" 
+  value="PS Coffee Shop" 
+  position="0 0.6 -1" 
+  align="center" 
+  width="2.5" 
+  color="#00FF00"
+  font="https://cdn.aframe.io/fonts/Exo2Bold.fnt">
+</a-text>
         </a-camera>
       </a-entity>
 
@@ -153,16 +174,16 @@
       <a-box id="left-wall" position="-6 2.5 0" width="0.1" height="5" depth="12" color="#95a5a6"></a-box> 
       <a-box id="right-wall" position="6 2.5 0" width="0.1" height="5" depth="12" color="#95a5a6"></a-box> 
 
-<a-plane class="coffee-ad" visible="false" position="0 2.8 -4.9" width="3.5" height="2" src="#ad1" poster-audio="clip: aud/2.wav"></a-plane>
+<a-plane class="coffee-ad" visible="false" position="0 2.8 -4.9" width="3.5" height="2" src="#ad1" poster-audio="clip: aud/21.wav"></a-plane>
         
       <a-entity position="-5.9 2.5 0" rotation="0 90 0">
-        <a-plane class="coffee-ad" visible="false" position="-3 0 0" width="2" height="2.5" src="#ad2" poster-audio="clip: aud/1.wav"></a-plane>
-        <a-plane class="coffee-ad" visible="false" position="1 0 0" width="2" height="2.5" src="#ad3" poster-audio="clip: aud/3.wav"></a-plane>
+        <a-plane class="coffee-ad" visible="false" position="-3 0 0" width="2" height="2.5" src="#ad2" poster-audio="clip: aud/22.wav"></a-plane>
+        <a-plane class="coffee-ad" visible="false" position="1 0 0" width="2" height="2.5" src="#ad3" poster-audio="clip: aud/23.wav"></a-plane>
       </a-entity>
 
       <a-entity position="5.9 2.5 0" rotation="0 -90 0">
-        <a-plane class="coffee-ad" visible="false" position="-2 0 0" width="2" height="2.5" src="#ad4" poster-audio="clip: aud/2.wav"></a-plane>
-        <a-plane class="coffee-ad" visible="false" position="2 0 0" width="2" height="2.5" src="#ad5" poster-audio="clip: aud/1.wav"></a-plane>
+        <a-plane class="coffee-ad" visible="false" position="-2 0 0" width="2" height="2.5" src="#ad4" poster-audio="clip: aud/24.wav"></a-plane>
+        <a-plane class="coffee-ad" visible="false" position="2 0 0" width="2" height="2.5" src="#ad5" poster-audio="clip: aud/21.wav"></a-plane>
       </a-entity>
 
       <!-- Office Furniture and Equipment Group -->

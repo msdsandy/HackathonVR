@@ -43,22 +43,12 @@
           const coffeeShopGroup = document.querySelector('#coffee-shop-group');
           
           el.addEventListener('click', function () {
-            // Play src2 (audio2) first
+            // Play src2 (audio2) first after clicking the coffee cup
             audio2.components.sound.playSound();
 
-            // After src2 finishes, play bgm1
+            // After src2 finishes, play bgm2
             audio2.addEventListener('sound-ended', () => {
-              bgm1.components.sound.playSound();
-            });
-
-            // After bgm1 finishes, play bgm2
-            bgm1.addEventListener('sound-ended', () => {
               bgm2.components.sound.playSound();
-            });
-
-            // After bgm2 finishes, play bgm3
-            bgm2.addEventListener('sound-ended', () => {
-              bgm3.components.sound.playSound();
             });
 
             // Hide office group and show coffee shop

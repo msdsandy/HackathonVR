@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffee Ad Office - Professional Edition</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script>
+      // Sequence Controller: Starts 2.wav -> Cup Glow & Heartbeat
+      AFRAME.registerComponent('sequence-controller', {
+        init: function () {
+          const audio2 = document.querySelector('#audio2');
+          const msg2 = document.querySelector('#msg2');
+          const cup = document.querySelector('#coffee-cup');
+
+          this.el.addEventListener('loaded', () => {
+            audio2.components.sound.playSound();
+            msg2.setAttribute('visible', 'true');
+          });
+
+          audio2.addEventListener('sound-ended', () => {
+            msg2.setAttribute('visible', 'false');
+            cup.emit('startGlow'); 
+          });
+        }
+      });
+
+      // Coffee Logic: Handles Cup Click -> Ads Appear -> Camera Pan
+      AFRAME.registerComponent('coffee-logic', {
+        init: function () {
+          const el = this.el;
+          const bgm = document.querySelector('#bgm-coffee');
+          const ads = document.querySelectorAll('.coffee-ad');
+          const cameraRig = document.querySelector('#camera-rig');
+          const clickMsg = document.querySelector('#click-msg');
+          const backWall = document.querySelector('#back-wall');
+          const leftWall = document.querySelector('#left-wall');
+          const rightWall = document.querySelector('#right-wall');
+          const officeGroup = document.querySelector('#office-group');
+          const coffeeShopGroup = document.querySelector('#coffee-shop-group');
+          
+          el.addEventListener('click', function () {
+            el.removeAttribute('animation__color');
+            el.removeAttribute('animation__heartbeat');
+            el.setAttribute('material', 'color', '#ffffff');
+            el.setAttribute('scale', '1 1 1');
+            bgm.components.sound.playSound();
+            
+            // Hide office group and show coffee shop
+            officeGroup.setAttribute('visible', 'false');
+            coffeeShopGroup.setAttribute('visible', 'true');
+            
+            // Change wall images
+            backWall.setAttribute('material', 'src', '#cwall');
+            leftWall.setAttribute('material', 'src', '#cwall');
+            rightWall.setAttribute('material', 'src', '#cwall');
+            
+            ads.forEach(ad => {
+              ad.setAttribute('visible', 'true');
+              ad.classList.add('clickable');
+              ad.setAttribute('animation', 'property: scale; from: 0 0 0; to: 1 1 1; dur: 800; easing: easeOutBack');
+            });
+
+            clickMsg.setAttribute('visible', 'true');
+            cameraRig.setAttribute('animation', { property: 'position', to: '-1 1 1.5', dur: 3000, easing: 'easeInOutQuad' });
+          });
+        }
+      });
+
+      AFRAME.registerComponent('poster-audio', {
+        schema: { clip: {type: 'string'} },
+        init: function () {
+          this.el.addEventListener('click', () => {
+            const soundEntity = document.querySelector('#poster-sound');
+            soundEntity.setAttribute('sound', 'src', this.data.clip);
+            soundEntity.components.sound.stopSound();
+            soundEntity.components.sound.playSound();
+          });
+        }
+      });
+
+      AFRAME.registerComponent('smooth-transition', {
+        init: function () {
+          const officeGroup = document.querySelector('#office-group');
+          const coffeeShopGroup = document.querySelector('#coffee-shop-group');
+          const cameraRig = document.querySelector('#camera-rig');
+
+          this.el.addEventListener('click', () => {
+            // Animate office group fading out
+            officeGroup.setAttribute('animation__fadeout', {
+              property: 'opacity',
+              to: 0,
+              dur: 1000,
+              easing: 'easeInOutQuad',
+              startEvents: 'fadeout'
+            });
+            officeGroup.emit('fadeout');
+
+            // Animate coffee shop group fading in
+            coffeeShopGroup.setAttribute('animation__fadein', {
+              property: 'opacity',
+              from: 0,
+              to: 1,
+              dur: 1000,
+              easing: 'easeInOutQuad',
+              startEvents: 'fadein'
+            });
+            coffeeShopGroup.emit('fadein');
+
+            // Smooth camera movement
+            cameraRig.setAttribute('animation', {
+              property: 'position',
+              to: '-1 1 1.5',
+              dur: 2000,
+              easing: 'easeInOutQuad'
+            });
+          });
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <a-scene shadow="type: pcfsoft" cursor="rayOrigin: mouse" sequence-controller>
+      
+      <a-assets>
+        <img id="floorTex" src="img/flo.jpeg" crossorigin="anonymous">
+        <audio id="src2" src="aud/2.wav"></audio>
+        <audio id="src4" src="aud/11.mpeg"></audio>
+        <img id="ad1" src="img/1.jpeg" crossorigin="anonymous">
+        <img id="ad2" src="img/2.jpeg" crossorigin="anonymous">
+        <img id="ad3" src="img/3.jpeg" crossorigin="anonymous">
+        <img id="ad4" src="img/4.jpeg" crossorigin="anonymous">
+        <img id="ad5" src="img/5.jpeg" crossorigin="anonymous">
+        <img id="cwall" src="img/cwall.png" crossorigin="anonymous">
+      </a-assets>
+
+      <a-entity id="audio2" sound="src: #src2; autoplay: true"></a-entity>
+      <a-entity id="bgm-coffee" sound="src: #src4; loop: true; volume: 0.2"></a-entity>
+      <a-entity id="poster-sound" sound="volume: 1"></a-entity>
+
+      <a-entity id="camera-rig" position="0 0 -2">
+        <a-camera look-controls wasd-controls="acceleration: 15">
+          <a-cursor color="#FF0000" raycaster="objects: .clickable"></a-cursor>
+          <a-text id="msg2" visible="false" value="Coffee Time ☕" position="0 0 -1" align="center" width="3" color="#FFFFFF"></a-text>
+          <a-text id="click-msg" visible="false" value="Click a poster to learn more" position="0 0.6 -1" align="center" width="2.5" color="#00FF00"></a-text>
+        </a-camera>
+      </a-entity>
+
+      <a-plane position="0 0 0" rotation="-90 0 0" width="12" height="12" src="#floorTex" repeat="4 4"></a-plane>
+      <a-sky color="#111"></a-sky>
+      
+      <a-box id="back-wall" position="0 2.5 -5" width="12" height="5" depth="0.1" color="#2c3e50"></a-box> 
+      <a-box id="left-wall" position="-6 2.5 0" width="0.1" height="5" depth="12" color="#95a5a6"></a-box> 
+      <a-box id="right-wall" position="6 2.5 0" width="0.1" height="5" depth="12" color="#95a5a6"></a-box> 
+
+<a-plane class="coffee-ad" visible="false" position="0 2.8 -4.9" width="3.5" height="2" src="#ad1" poster-audio="clip: aud/2.wav"></a-plane>
+        
+      <a-entity position="-5.9 2.5 0" rotation="0 90 0">
+        <a-plane class="coffee-ad" visible="false" position="-3 0 0" width="2" height="2.5" src="#ad2" poster-audio="clip: aud/1.wav"></a-plane>
+        <a-plane class="coffee-ad" visible="false" position="1 0 0" width="2" height="2.5" src="#ad3" poster-audio="clip: aud/3.wav"></a-plane>
+      </a-entity>
+
+      <a-entity position="5.9 2.5 0" rotation="0 -90 0">
+        <a-plane class="coffee-ad" visible="false" position="-2 0 0" width="2" height="2.5" src="#ad4" poster-audio="clip: aud/2.wav"></a-plane>
+        <a-plane class="coffee-ad" visible="false" position="2 0 0" width="2" height="2.5" src="#ad5" poster-audio="clip: aud/1.wav"></a-plane>
+      </a-entity>
+
+      <!-- Office Furniture and Equipment Group -->
+      <a-entity id="office-group" position="0 0 0">
+        
+        <!-- Main Desk Setup -->
+        <a-entity id="desk-group" position="0 0 -3.5">
+          <a-box position="0 0.75 0" width="3.5" height="0.1" depth="1.5" color="#4B2C20"></a-box>
+          
+          <a-entity id="keyboard" position="0 0.82 0.3">
+              <a-box width="0.8" height="0.03" depth="0.3" color="#222"></a-box> 
+              <a-box width="0.75" height="0.01" depth="0.25" position="0 0.02 0" color="#333"></a-box> 
+          </a-entity>
+
+          <a-entity id="monitor" position="0 1.3 -0.5">
+              <a-box width="1.8" height="0.9" depth="0.05" color="#111"></a-box> 
+              <a-plane position="0 0.05 0.03" width="1.7" height="0.75" color="#000">
+                  <a-text value="SYSTEM IDLE\nWAITING FOR BREAK..." align="center" width="2" position="0 0 0.01"></a-text>
+              </a-plane>
+          </a-entity>
+          
+          <a-entity id="coffee-cup" position="0.8 0.85 0.2" coffee-logic class="clickable"
+                    animation__color="property: material.color; type: color; from: #ffffff; to: #FFFF00; dur: 600; dir: alternate; loop: true; startEvents: startGlow"
+                    animation__heartbeat="property: scale; from: 1 1 1; to: 1.15 1.15 1.15; dur: 400; dir: alternate; loop: true; startEvents: startGlow">
+              <a-cylinder radius="0.05" height="0.15" color="#ffffff"></a-cylinder> 
+              <a-torus radius="0.035" radius-tubular="0.006" arc="180" rotation="0 0 -90" position="0.05 0 0" color="#ffffff"></a-torus> 
+              <a-cylinder radius="0.045" height="0.01" position="0 0.07 0" color="#4b3621"></a-cylinder> 
+          </a-entity>
+        </a-entity>
+
+        <!-- Desk Lamp -->
+        <a-entity id="desk-lamp" position="1.2 0.85 -3.5">
+          <!-- Base -->
+          <a-cylinder radius="0.08" height="0.05" color="#888888"></a-cylinder>
+          <!-- Pole -->
+          <a-cylinder radius="0.02" height="0.35" position="0 0.2 0" color="#888888"></a-cylinder>
+          <!-- Lamp head -->
+          <a-box width="0.2" height="0.15" depth="0.2" position="0 0.4 0" color="#FFFF00"></a-box>
+        </a-entity>
+
+        <!-- Filing Cabinet -->
+        <a-entity id="filing-cabinet" position="-3 0 -4">
+          <a-box width="0.6" height="1.2" depth="0.5" color="#666666"></a-box>
+          <!-- Drawer 1 -->
+          <a-box width="0.55" height="0.3" depth="0.35" position="0 0.35 0.1" color="#777777"></a-box>
+          <!-- Drawer 2 -->
+          <a-box width="0.55" height="0.3" depth="0.35" position="0 -0.1 0.1" color="#777777"></a-box>
+        </a-entity>
+
+        <!-- Bookshelf -->
+        <a-entity id="bookshelf" position="3.5 0 -4">
+          <!-- Left side -->
+          <a-box width="0.1" height="1.4" depth="0.4" position="-0.4 0.7 0" color="#5C4033"></a-box>
+          <!-- Right side -->
+          <a-box width="0.1" height="1.4" depth="0.4" position="0.4 0.7 0" color="#5C4033"></a-box>
+          <!-- Back -->
+          <a-box width="0.8" height="1.4" depth="0.1" position="0 0.7 -0.25" color="#5C4033"></a-box>
+          <!-- Shelves -->
+          <a-box width="0.75" height="0.05" depth="0.35" position="0 0.35 0" color="#7D5C4C"></a-box>
+          <a-box width="0.75" height="0.05" depth="0.35" position="0 0.75 0" color="#7D5C4C"></a-box>
+          <a-box width="0.75" height="0.05" depth="0.35" position="0 1.15 0" color="#7D5C4C"></a-box>
+          <!-- Books -->
+          <a-box width="0.08" height="0.25" depth="0.3" position="-0.25 0.45 0" color="#E53935"></a-box>
+          <a-box width="0.08" height="0.25" depth="0.3" position="-0.1 0.45 0" color="#1565C0"></a-box>
+          <a-box width="0.08" height="0.25" depth="0.3" position="0.05 0.45 0" color="#00796B"></a-box>
+        </a-entity>
+
+        <!-- Second Desk in Corner -->
+        <a-entity id="desk-group-2" position="-4.5 0 -4.5">
+          <!-- Desk top -->
+          <a-box position="0 0.75 0" width="3 " height="0.1" depth="1.2" color="#5D4037"></a-box>
+          <!-- Left leg -->
+          <a-box position="-1.3 0.35 -0.4" width="0.1" height="0.7" depth="0.1" color="#3E2723"></a-box>
+          <!-- Right leg -->
+          <a-box position="1.3 0.35 -0.4" width="0.1" height="0.7" depth="0.1" color="#3E2723"></a-box>
+          <!-- Computer on desk -->
+          <a-box width="0.3" height="0.4" depth="0.3" position="-0.8 1.05 -0.2" color="#1a1a1a"></a-box>
+        </a-entity>
+
+        <!-- Second Office Chair -->
+        <a-entity id="office-chair-2" position="-5 0 -5">
+          <!-- Seat -->
+          <a-cylinder radius="0.35" height="0.08" position="0 0.95 0" color="#2d5016"></a-cylinder>
+          <!-- Backrest -->
+          <a-box width="0.7" height="0.7" depth="0.1" position="0 1.4 -0.3" color="#2d5016"></a-box>
+          <!-- Base -->
+          <a-cylinder radius="0.45" height="0.08" position="0 0.25 0" color="#1a3d0a"></a-cylinder>
+        </a-entity>
+
+        <!-- Printer -->
+        <a-entity id="printer" position="1 0.8 0.5">
+          <a-box width="0.6" height="0.3" depth="0.5" color="#cccccc"></a-box>
+          <a-box width="0.55" height="0.2" depth="0.4" position="0 0.15 0" color="#eeeeee"></a-box>
+        </a-entity>
+
+        <!-- Decorative Plant -->
+        <a-entity id="plant" position="-4.5 0 -2">
+          <!-- Pot -->
+          <a-cone radius-bottom="0.25" radius-top="0.2" height="0.35" color="#8B4513"></a-cone>
+          <!-- Leaves -->
+          <a-sphere radius="0.3" position="0 0.5 0" color="#228B22"></a-sphere>
+          <a-sphere radius="0.25" position="-0.2 0.6 0.15" color="#32CD32"></a-sphere>
+          <a-sphere radius="0.25" position="0.2 0.6 0.15" color="#32CD32"></a-sphere>
+        </a-entity>
+
+        <!-- Sofa Set -->
+        <a-entity id="sofa-set" position="3 0 3">
+          <!-- Sofa Base -->
+          <a-box position="0 0.5 0" width="2.5" height="0.5" depth="1" color="#8B4513"></a-box>
+          <!-- Sofa Backrest -->
+          <a-box position="0 1 0.5" width="2.5" height="1" depth="0.2" color="#8B4513"></a-box>
+          <!-- Sofa Cushions -->
+          <a-box position="-0.8 0.7 0" width="0.7" height="0.4" depth="0.9" color="#D2691E"></a-box>
+          <a-box position="0 0.7 0" width="0.7" height="0.4" depth="0.9" color="#D2691E"></a-box>
+          <a-box position="0.8 0.7 0" width="0.7" height="0.4" depth="0.9" color="#D2691E"></a-box>
+        </a-entity>
+
+      </a-entity>
+
+      <!-- Window Frame -->
+      <a-entity id="window" position="0 1.5 5.9">
+        <!-- Frame -->
+        <a-box width="2" height="1.5" depth="0.1" color="#8B7355"></a-box>
+        <!-- Glass panes (4 panes) -->
+        <a-plane width="0.9" height="0.7" position="-0.55 0.35 0.06" color="#87CEEB" transparent="true" opacity="0.3"></a-plane>
+        <a-plane width="0.9" height="0.7" position="0.55 0.35 0.06" color="#87CEEB" transparent="true" opacity="0.3"></a-plane>
+        <a-plane width="0.9" height="0.7" position="-0.55 -0.35 0.06" color="#87CEEB" transparent="true" opacity="0.3"></a-plane>
+        <a-plane width="0.9" height="0.7" position="0.55 -0.35 0.06" color="#87CEEB" transparent="true" opacity="0.3"></a-plane>
+      </a-entity>
+
+      <!-- Coffee Shop Group - Hidden Initially -->
+      <a-entity id="coffee-shop-group" visible="false" position="0 0 0">
+        
+        <!-- Coffee Table 1 with Chairs -->
+        <a-entity id="coffee-table-1" position="-3 0 1">
+          <a-cylinder radius="0.7" height="0.05" position="0 0.5 0" color="#3E2723"></a-cylinder>
+          <a-cylinder radius="0.05" height="0.5" position="-0.6 0.25 -0.3" color="#795548"></a-cylinder>
+          <a-cylinder radius="0.05" height="0.5" position="0.6 0.25 -0.3" color="#795548"></a-cylinder>
+          <a-cylinder radius="0.05" height="0.5" position="-0.6 0.25 0.3" color="#795548"></a-cylinder>
+          <a-cylinder radius="0.05" height="0.5" position="0.6 0.25 0.3" color="#795548"></a-cylinder>
+
+          <!-- Coffee cups on table -->
+          <a-cylinder radius="0.06" height="0.12" position="-0.3 0.6 0" color="#6D4C41"></a-cylinder>
+          <a-cylinder radius="0.04" height="0.08" position="-0.3 0.62 0" color="#D7CCC8"></a-cylinder>
+          <a-cylinder radius="0.06" height="0.12" position="0.3 0.6 0" color="#6D4C41"></a-cylinder>
+          <a-cylinder radius="0.04" height="0.08" position="0.3 0.62 0" color="#D7CCC8"></a-cylinder>
+
+          <!-- Chairs -->
+          <a-entity position="-1 0 0.8">
+            <a-box position="0 0.25 0" width="0.5" height="0.05" depth="0.5" color="#8B4513"></a-box>
+            <a-cylinder position="-0.2 0.1 -0.2" radius="0.05" height="0.2" color="#654321"></a-cylinder>
+            <a-cylinder position="0.2 0.1 -0.2" radius="0.05" height="0.2" color="#654321"></a-cylinder>
+            <a-cylinder position="-0.2 0.1 0.2" radius="0.05" height="0.2" color="#654321"></a-cylinder>
+            <a-cylinder position="0.2 0.1 0.2" radius="0.05" height="0.2" color="#654321"></a-cylinder>
+          </a-entity>
+          <a-entity position="1 0 0.8">
+            <a-box position="0 0.25 0" width="0.5" height="0.05" depth="0.5" color="#8B4513"></a-box>
+            <a-cylinder position="-0.2 0.1 -0.2" radius="0.05" height="0.2" color="#654321"></a-cylinder>
+            <a-cylinder position="0.2 0.1 -0.2" radius="0.05" height="0.2" color="#654321"></a-cylinder>
+            <a-cylinder position="-0.2 0.1 0.2" radius="0.05" height="0.2" color="#654321"></a-cylinder>
+            <a-cylinder position="0.2 0.1 0.2" radius="0.05" height="0.2" color="#654321"></a-cylinder>
+          </a-entity>
+        </a-entity>
+
+        <!-- Coffee Table 2 without Chairs -->
+        <a-entity id="coffee-table-2" position="0 0 1">
+          <a-cylinder radius="0.7" height="0.05" position="0 0.5 0" color="#3E2723"></a-cylinder>
+          <a-cylinder radius="0.05" height="0.5" position="-0.6 0.25 -0.3" color="#795548"></a-cylinder>
+          <a-cylinder radius="0.05" height="0.5" position="0.6 0.25 -0.3" color="#795548"></a-cylinder>
+          <a-cylinder radius="0.05" height="0.5" position="-0.6 0.25 0.3" color="#795548"></a-cylinder>
+          <a-cylinder radius="0.05" height="0.5" position="0.6 0.25 0.3" color="#795548"></a-cylinder>
+
+          <!-- Coffee cups on table -->
+          <a-cylinder radius="0.06" height="0.12" position="-0.4 0.6 -0.2" color="#6D4C41"></a-cylinder>
+          <a-cylinder radius="0.04" height="0.08" position="-0.4 0.62 -0.2" color="#D7CCC8"></a-cylinder>
+          <a-cylinder radius="0.06" height="0.12" position="0.4 0.6 0.2" color="#6D4C41"></a-cylinder>
+          <a-cylinder radius="0.04" height="0.08" position="0.4 0.62 0.2" color="#D7CCC8"></a-cylinder>
+        </a-entity>
+
+        <!-- Coffee Table 3 without Coffee Cups -->
+        <a-entity id="coffee-table-3" position="3 0 1">
+          <a-box width="1.5" height="0.08" depth="0.9" position="0 0.5 0" color="#8B4513"></a-box>
+          <a-box width="0.08" height="0.5" depth="0.08" position="-0.6 0.25 -0.3" color="#654321"></a-box>
+          <a-box width="0.08" height="0.5" depth="0.08" position="0.6 0.25 -0.3" color="#654321"></a-box>
+          <a-box width="0.08" height="0.5" depth="0.08" position="-0.6 0.25 0.3" color="#654321"></a-box>
+          <a-box width="0.08" height="0.5" depth="0.08" position="0.6 0.25 0.3" color="#654321"></a-box>
+        </a-entity>
+
+        <!-- Coffee Table 4 without Coffee Cups -->
+        <a-entity id="coffee-table-4" position="-3 0 -1">
+          <a-box width="1.5" height="0.08" depth="0.9" position="0 0.5 0" color="#8B4513"></a-box>
+          <a-box width="0.08" height="0.5" depth="0.08" position="-0.6 0.25 -0.3" color="#654321"></a-box>
+          <a-box width="0.08" height="0.5" depth="0.08" position="0.6 0.25 -0.3" color="#654321"></a-box>
+          <a-box width="0.08" height="0.5" depth="0.08" position="-0.6 0.25 0.3" color="#654321"></a-box>
+          <a-box width="0.08" height="0.5" depth="0.08" position="0.6 0.25 0.3" color="#654321"></a-box>
+        </a-entity>
+
+        <!-- Coffee Table 5 without Coffee Cups -->
+        <a-entity id="coffee-table-5" position="3 0 -1">
+          <a-box width="1.5" height="0.08" depth="0.9" position="0 0.5 0" color="#8B4513"></a-box>
+          <a-box width="0.08" height="0.5" depth="0.08" position="-0.6 0.25 -0.3" color="#654321"></a-box>
+          <a-box width="0.08" height="0.5" depth="0.08" position="0.6 0.25 -0.3" color="#654321"></a-box>
+          <a-box width="0.08" height="0.5" depth="0.08" position="-0.6 0.25 0.3" color="#654321"></a-box>
+          <a-box width="0.08" height="0.5" depth="0.08" position="0.6 0.25 0.3" color="#654321"></a-box>
+        </a-entity>
+
+        <!-- Coffee Machine 1 -->
+        <a-entity id="coffee-machine-1" position="-4.5 0 -3">
+          <a-box width="0.8" height="0.1" depth="0.6" position="0 0.5 0" color="#333333"></a-box>
+          <a-box width="0.7" height="0.6" depth="0.5" position="0 1.05 0" color="#2C2C2C"></a-box>
+          <a-box width="0.7" height="0.08" depth="0.5" position="0 1.35 0" color="#444444"></a-box>
+          <a-cylinder radius="0.12" height="0.4" position="0.2 1.1 0.12" rotation="90 0 0" color="#87CEEB"></a-cylinder>
+          <a-cylinder radius="0.08" height="0.15" position="0 0.95 -0.25" color="#DAA520"></a-cylinder>
+          <a-sphere radius="0.05" position="-0.25 1.25 0.12" color="#FF4500"></a-sphere>
+        </a-entity>
+ <!-- <a-entity gltf-model="coffee_machine/scene.gltf" position="-4 0 -4.9" scale="0.5 0.5 0.5"></a-entity> -->
+
+ <a-entity 
+  gltf-model="coffee_machine/scene.gltf"
+  position="-4 0 -4.9" 
+  scale="0.5 0.5 0.5"
+  material="emissive: #ff4400; emissiveIntensity: 0.3">
+</a-entity>
+        <!-- Coffee Cash Counter -->
+        <a-entity id="coffee-counter" position="5.5 0 0">
+          <!-- Counter base -->
+          <a-box width="1.2" height="0.1" depth="0.8" position="0 0.9 0" color="#8B4513"></a-box>
+          <!-- Counter front panel -->
+          <a-box width="1.2" height="0.8" depth="0.1" position="0 0.5 -0.4" color="#654321"></a-box>
+          <!-- Register top -->
+          <a-box width="0.8" height="0.08" depth="0.6" position="0 1.0 0" color="#DAA520"></a-box>
+          <!-- Display screen -->
+          <a-plane width="0.5" height="0.15" position="0 0.88 0.05" color="#000000"></a-plane>
+          <!-- Side shelves for cups -->
+          <a-box width="0.15" height="0.4" depth="0.6" position="-0.5 0.7 0" color="#5C4033"></a-box>
+          <a-box width="0.15" height="0.4" depth="0.6" position="0.5 0.7 0" color="#5C4033"></a-box>
+          <!-- Small cups on shelf -->
+          <a-cylinder radius="0.05" height="0.08" position="-0.5 1.0 -0.1" color="#FFF8DC"></a-cylinder>
+          <a-cylinder radius="0.05" height="0.08" position="-0.5 1.0 0.1" color="#FFF8DC"></a-cylinder>
+          <a-cylinder radius="0.05" height="0.08" position="0.5 1.0 -0.1" color="#FFF8DC"></a-cylinder>
+          <a-cylinder radius="0.05" height="0.08" position="0.5 1.0 0.1" color="#FFF8DC"></a-cylinder>
+        </a-entity>
+
+      </a-entity>
+
+      <!-- Backside wall for coffee shop -->
+      <a-box id="coffee-shop-back-wall" position="0 2.5 5" width="12" height="5" depth="0.1" visible="true" color="#95a5a6"></a-box>
+
+      <!-- Ceiling for coffee shop -->
+      <a-box id="coffee-shop-ceiling" position="0 5 0" width="12" height="0.1" depth="12" color="#f5f5f5" visible="true"></a-box>
+
+      <a-light type="ambient" color="#fff" intensity="0.9"></a-light>
+    </a-scene>
+  </body>
+</html>

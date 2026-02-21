@@ -31,6 +31,7 @@
           const el = this.el;
           const bgm = document.querySelector('#bgm-coffee');
           const bgm1 = document.querySelector('#bgm-coffee1');
+          const bgm2 = document.querySelector('#bgm-coffee');
           const bgm3 = document.querySelector('#bgm-coffee2');
           const ads = document.querySelectorAll('.coffee-ad');
           const cameraRig = document.querySelector('#camera-rig');
@@ -42,27 +43,33 @@
           const coffeeShopGroup = document.querySelector('#coffee-shop-group');
           
           el.addEventListener('click', function () {
-            el.removeAttribute('animation__color');
-            el.removeAttribute('animation__heartbeat');
-            el.setAttribute('material', 'color', '#ffffff');
-            el.setAttribute('scale', '1 1 1');
-            bgm.components.sound.playSound();
-            bgm1.components.sound.playSound();
+            // Play src2 (audio2) first
+            audio2.components.sound.playSound();
 
-            // Play bgm3 after bgm1 finishes
+            // After src2 finishes, play bgm1
+            audio2.addEventListener('sound-ended', () => {
+              bgm1.components.sound.playSound();
+            });
+
+            // After bgm1 finishes, play bgm2
             bgm1.addEventListener('sound-ended', () => {
+              bgm2.components.sound.playSound();
+            });
+
+            // After bgm2 finishes, play bgm3
+            bgm2.addEventListener('sound-ended', () => {
               bgm3.components.sound.playSound();
             });
-            
+
             // Hide office group and show coffee shop
             officeGroup.setAttribute('visible', 'false');
             coffeeShopGroup.setAttribute('visible', 'true');
-            
+
             // Change wall images
             backWall.setAttribute('material', 'src', '#cwall');
             leftWall.setAttribute('material', 'src', '#cwall');
             rightWall.setAttribute('material', 'src', '#cwall');
-            
+
             ads.forEach(ad => {
               ad.setAttribute('visible', 'true');
               ad.classList.add('clickable');
@@ -177,8 +184,8 @@
 <a-plane class="coffee-ad" visible="false" position="0 2.8 -4.9" width="3.5" height="2" src="#ad1" poster-audio="clip: aud/21.wav"></a-plane>
         
       <a-entity position="-5.9 2.5 0" rotation="0 90 0">
-        <a-plane class="coffee-ad" visible="false" position="-3 0 0" width="2" height="2.5" src="#ad2" poster-audio="clip: aud/23.wav"></a-plane>
-        <a-plane class="coffee-ad" visible="false" position="1 0 0" width="2" height="2.5" src="#ad3" poster-audio="clip: aud/22.wav"></a-plane>
+        <a-plane class="coffee-ad" visible="false" position="-3 0 0" width="2" height="2.5" src="#ad2" poster-audio="clip: aud/22.wav"></a-plane>
+        <a-plane class="coffee-ad" visible="false" position="1 0 0" width="2" height="2.5" src="#ad3" poster-audio="clip: aud/23.wav"></a-plane>
       </a-entity>
 
       <a-entity position="5.9 2.5 0" rotation="0 -90 0">
@@ -439,4 +446,3 @@
     </a-scene>
   </body>
 </html>
-
